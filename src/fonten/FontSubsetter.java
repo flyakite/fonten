@@ -209,6 +209,9 @@ public class FontSubsetter extends HttpServlet {
     	res.setHeader("Last-Modified", new Date().toString());
     	res.setHeader("Cache-Control", "max-age=86400, public");
     	
+    	//allow cross domain for firefox
+    	res.setHeader("Access-Control-Allow-Origin","*");
+    	
     	//output font file by format
         OutputStream os = res.getOutputStream();
         if (format == FontFormat.Eot) {
