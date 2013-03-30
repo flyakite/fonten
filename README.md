@@ -13,6 +13,10 @@ The online and real time fonten builds a much smaller size font file that contai
 
 Visit [http://fonten-demo.appspot.com](http://fonten-demo.appspot.com) for more intoduction, installation guide and APIs.
 
+## TO DO
+* font-face client support
+* more server examples
+
 ## Credit
 This project is developed based on Google's open source project [sfntly](https://code.google.com/p/sfntly/) and powered by [Google App Engine/Java](https://developers.google.com/appengine/docs/java/overview).
 
