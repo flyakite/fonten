@@ -1,0 +1,10 @@
+.project
+.classpath
+.settings/
+appengine-generated/
+war/WEB-INF/lib/appengine-*.jar
+war/WEB-INF/lib/asm-*.jar
+war/WEB-INF/lib/datanucleus-*.jar
+war/WEB-INF/lib/geronimo-*.jar
+war/WEB-INF/lib/jdo-api-*.jar
+war/WEB-INF/lib/jta-*.jar

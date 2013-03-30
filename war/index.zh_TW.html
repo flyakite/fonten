@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8">
+    <title>fonten</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="等了好久，現在終於也能自己即時做出中文字型了">
+    <meta name="author" content="Shih-Wen Su">
+
+    <!-- Le styles -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 20px;
+        padding-bottom: 40px;
+      }
+
+      /* Custom container */
+      .container-narrow {
+        margin: 0 auto;
+        max-width: 800px;
+      }
+      .container-narrow > hr {
+        margin: 30px 0;
+      }
+
+      /* Main marketing message and sign up button */
+      .jumbotron {
+        margin: 60px 0;
+        text-align: center;
+      }
+      .jumbotron h1 {
+        font-size: 72px;
+        line-height: 1;
+      }
+      .jumbotron .btn {
+        font-size: 21px;
+        padding: 14px 24px;
+      }
+
+      /* Supporting marketing content */
+      .marketing {
+        margin: 60px 0;
+      }
+      .marketing p + h4 {
+        margin-top: 28px;
+      }
+    </style>
+    <link href="/css/bootstrap-responsive.min.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <div class="container-narrow">
+
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="/">English</a></li>
+          <li><a href="/fontlist">Demo</a></li>
+          <li><a href="http://github.com/flyakite/fonten">Github</a></li>
+        </ul>
+        <h3 class="muted">fonten</h3>
+      </div>
+
+      <hr>
+
+      <div class="jumbotron">
+        <h1>fonten</h1>
+        <p class="lead">等了好久，現在終於也能自己即時做出中文字型了</p> 
+      </div>
+
+      <hr>
+
+      <div class="row-fluid marketing">
+        <div class="span12">
+          <h4>為什麼用 fonten?</h4>
+          <p>
+            fonten是一個<strong>即時線上切割字型檔案的工具</strong>，在你安裝了fonten server之後，你可以先上傳字型檔，之後根據需要的文字即時產生對應的字型檔，尤其像是中文，字型檔動輒10~20MB，如果我們只需要轉換幾個字，那切出來的檔案大概只有幾KB，是原本的千分之一的大小，因為<strong>只有指定的文字的字型被包在新的字型檔裡</strong>。這個專案<strong>是開源的</strong>，你可以自由的改造他來符合你的需求。
+
+          <h4>使用範例</h4>
+          <p>
+            <strong>
+            <pre>
+  @font-face{ 
+    font-family: myfont; 
+    src: url('/font?<span class="text-warning">id</span>=opensans&amp;<span class="text-warning">text</span>=一些文字&amp;<span class="text-warning">format</span>=eot'); 
+  }
+            </pre>
+            </strong>
+          </p>
+
+          <h4>安裝 fonten server</h4>
+          <p>
+            <ol>
+              <li> 新增一個<a href="http://appengine.google.com">Google App Engine (GAE)</a>專案, 假設是 my_gae_project. </li>
+              <li> 下載並安裝 <a href="https://developers.google.com/appengine/downloads">GAE for Java</a></li>
+              <li> 下載 fonten <code>git clone git://github.com/flyakite/fonten.git</code> </li>
+              <li> 在 appengine-web.xml 中更改 application 的值成 my_gae_project 然後匯入 GAE.</li>
+              <li> 按 Deploy 上傳到 GAE server。你的server就會是http://my_gae_project.appspot.com/</li>
+              <li> 到 http://my_gae_project.appspot.com/fontlist 上傳你的字型檔</li>
+            </ol>
+          </p>
+
+          <h4>簡易API (GET API)</h4>
+          <p>
+            如果沒有需要很多字要轉換字型可以使用簡易版API，一般要少於2000字，中文編碼後大概要少於200字才能符合<a href="http://support.microsoft.com/kb/208427"> IE的URL限制</a>。<br>
+            連到你的server的 <strong>/font</strong> 並且包含下列參數:<br>
+            <dl class="dl-horizontal">
+              <dt>id</dt>
+              <dd>字型id，這是你上傳完整字型檔的時候指定的</dd>
+              <dt>text</dt>
+              <dd>需要的文字，如果你能先讓這個這些文字不重複和排序就更好了，因為同樣的GET request可以被快取。</dd>
+              <dt>format</dt>
+              <dd>字型格式，可以是"eot"或"woff"，如果你沒有指定，那就是你原本上傳的字體類型。(optional)</dd>
+              <dt>strip</dt>
+              <dd>去掉字體微調(hinting)，通常是truetype font(.ttf)會有的，預設會去掉，設為"0"代表不要去掉。(optional)</dd>
+            </dl>
+            範例 css: <br>
+            <pre> 
+
+  @font-face{
+    font-family: myfont;
+    src: url('http://fonten-demo.appspot.com/font?id=opensans&amp;text=中文&amp;format=eot');
+    src: local('☺'); 
+    src: url('http://fonten-demo.appspot.com/font?id=opensans&amp;text=中文&amp;format=woff'');
+    src: url('http://fonten-demo.appspot.com/font?id=opensans&amp;text=中文'); 
+  }
+            </pre>
+
+          </p>
+
+          <h4>進階API (POST API)</h4>
+          <p>
+            如果你有很多字需要轉換的話可以使用進階API，<br>
+            先發一個 POST request 到你的server的 <strong>/reserve</strong> 並且包含以下參數:<br>
+            <dl class="dl-horizontal">
+              <dt>text</dt>
+              <dd>要轉換字型的文字</dd>
+            </dl>
+            範例 javascript:
+            <pre>
+  var postData = { text: encodeURIComponent("更多中文") };
+  $.post('http://fonten-demo.appspot.com/reserve?callback=?', function(data){
+    var reservedToken = data.token;
+  }, 'json');
+            </pre>
+              然後 request 到 <strong>/font</strong> 並且包含簡易版API參數(不包含text)和以下參數:
+            <dl class="dl-horizontal">
+              <dt>token</dt>
+              <dd>POST預約得到的token</dd>
+            </dl>
+            <pre>
+  var fontURL = "http://fonten-demo.appspot.com/font?id=opensans&amp;token=" + reservedToken     
+            </pre>
+
+          </p>
+
+          <h4>歸功於</h4>
+          <p>這個專案是基於Google開源專案<a href="https://code.google.com/p/sfntly/">sfntly</a>並且使用<a href="https://developers.google.com/appengine/docs/java/overview">Google App Engine/Java</a>架設。</p>
+
+          <h4>作者</h4>
+          <p>
+            Shih-Wen Su <br> 
+            sushi@summeridea.com <br>
+            <a href="http://www.github.com/flyakite"> github </a><br>
+          </p>
+
+          <h4>License</h4>
+          <p>Apache 2.0</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="footer">
+      </div>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>

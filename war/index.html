@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>fonten</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="have your own realtime font subsetter">
+    <meta name="author" content="Shih-Wen Su">
+
+    <!-- Le styles -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 20px;
+        padding-bottom: 40px;
+      }
+
+      /* Custom container */
+      .container-narrow {
+        margin: 0 auto;
+        max-width: 800px;
+      }
+      .container-narrow > hr {
+        margin: 30px 0;
+      }
+
+      /* Main marketing message and sign up button */
+      .jumbotron {
+        margin: 60px 0;
+        text-align: center;
+      }
+      .jumbotron h1 {
+        font-size: 72px;
+        line-height: 1;
+      }
+      .jumbotron .btn {
+        font-size: 21px;
+        padding: 14px 24px;
+      }
+
+      /* Supporting marketing content */
+      .marketing {
+        margin: 60px 0;
+      }
+      .marketing p + h4 {
+        margin-top: 28px;
+      }
+    </style>
+    <link href="/css/bootstrap-responsive.min.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <div class="container-narrow">
+
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="/index.zh_TW.html">中文</a></li>
+          <li><a href="/fontlist">Demo</a></li>
+          <li><a href="http://github.com/flyakite/fonten">Github</a></li>
+        </ul>
+        <h3 class="muted">fonten</h3>
+      </div>
+
+      <hr>
+
+      <div class="jumbotron">
+        <h1>fonten</h1>
+        <p class="lead"> - have your own realtime font subsetter -</p> 
+      </div>
+
+      <hr>
+
+      <div class="row-fluid marketing">
+        <div class="span12">
+          <h4>Why fonten?</h4>
+          <p>
+            The <strong>online and real time</strong> fonten builds <strong>a much smaller size font file</strong> that contains <strong>only specified characters</strong>. One runs a fonten server that hosts all his or her favorite fonts and builds subset font file on the fly. For Chinese fonts, the subset font file built by fonten is only a few KB, which is less than 1/1000 of the original size (10~20MB). What makes it even better? It's <strong>open source</strong>!
+
+          <h4>Example Usage</h4>
+          <p>
+            <strong>
+            <pre>
+  @font-face{ 
+    font-family: myfont; 
+    src: url('/font?<span class="text-warning">id</span>=opensans&amp;<span class="text-warning">text</span>=SomeCharaters&amp;<span class="text-warning">format</span>=eot'); 
+  }
+            </pre>
+            </strong>
+          </p>
+
+          <h4>Install fonten server</h4>
+          <p>
+            <ol>
+              <li> Start a <a href="http://appengine.google.com">Google App Engine (GAE)</a> project, say my_gae_project. </li>
+              <li> Download and install <a href="https://developers.google.com/appengine/downloads">GAE for Java</a></li>
+              <li> Download fonten <code>git clone git://github.com/flyakite/fonten.git</code> </li>
+              <li> Change application name in appengine-web.xml to my_gae_project and import the project to GAE.</li>
+              <li> Deploy it to GAE server. Your server is now at http://my_gae_project.appspot.com/</li>
+              <li> Go to http://my_gae_project.appspot.com/fontlist and upload your font file.</li> 
+            </ol>
+
+          </p>
+
+          <h4>Simple API (GET API)</h4>
+          <p>
+            Use Simple API if you only need not so many characters ( ~&lt;2000 for Ascii and ~&lt;200 for encoded Chinese characters to comply with <a href="http://support.microsoft.com/kb/208427">IE's URL limit</a>)<br>
+            Request to your server's <strong>/font</strong> with following parameters to get the font:<br>
+            <dl class="dl-horizontal">
+              <dt>id</dt>
+              <dd>Font id, this is the same as you specified when you upload your font</dd>
+              <dt>text</dt>
+              <dd>Input character set. The subset font file can be cached and reused better if the input characters are unique and sorted.</dd>
+              <dt>format</dt>
+              <dd>Font format. "eot" or "woff". If not specified, the oringal font format is served. (optional)</dd>
+              <dt>strip</dt>
+              <dd>Strip hinting. Usually available in truetype font(.ttf). Default is true, set to "0" to stop stripping.(optional)</dd>
+            </dl>
+            Example css: <br>
+            <pre> 
+
+  @font-face{
+    font-family: myfont;
+    src: url('http://fonten-demo.appspot.com/font?id=opensans&amp;text=ABC&amp;format=eot');
+    src: local('☺'); 
+    src: url('http://fonten-demo.appspot.com/font?id=opensans&amp;text=ABC&amp;format=woff'');
+    src: url('http://fonten-demo.appspot.com/font?id=opensans&amp;text=ABC'); 
+  }
+            </pre>
+
+          </p>
+
+          <h4>Advanced API (POST API)</h4>
+          <p>
+            Use Advanced API if you want to get subset font file with more characters. You need to post the input character set to the fonten server first, exchange a reserved token and use the token to get the font file. <br>
+            POST request to your server's<strong>/reserve</strong> to reserve a token with parameters:<br>
+            <dl class="dl-horizontal">
+              <dt>text</dt>
+              <dd>Charaters you want with the font.</dd>
+            </dl>
+            Example javascript:
+            <pre>
+  var postData = { text: encodeURIComponent("ManyCharaters") };
+  $.post('http://fonten-demo.appspot.com/reserve?callback=?', function(data){
+    var reservedToken = data.token;
+  }, 'json');
+            </pre>
+              and assign the  to <strong>/font</strong> with parameters like in Simple API and the following:
+            <dl class="dl-horizontal">
+              <dt>token</dt>
+              <dd>Reserved token returned from server.</dd>
+            </dl>
+            <pre>
+  var fontURL = "http://fonten-demo.appspot.com/font?id=opensans&amp;token=" + reservedToken     
+            </pre>
+
+          </p>
+
+
+          <h4>Credit</h4>
+          <p>This project is developed based on Google's open source project <a href="https://code.google.com/p/sfntly/">sfntly</a> and powered by <a href="https://developers.google.com/appengine/docs/java/overview">Google App Engine/Java.</a></p>
+
+          <h4>Author</h4>
+          <p>
+            Shih-Wen Su <br> 
+            sushi@summeridea.com <br>
+            <a href="http://www.github.com/flyakite"> github </a> <br>
+          </p>
+
+          <h4>License</h4>
+          <p>Apache 2.0</p>
+
+      <div class="footer">
+      </div>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>
