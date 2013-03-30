@@ -1,7 +1,8 @@
 .project
 .classpath
 .settings/
-appengine-generated/
+war/WEB-INF/appengine-generated/
+war/WEB-INF/classes/
 war/WEB-INF/lib/appengine-*.jar
 war/WEB-INF/lib/asm-*.jar
 war/WEB-INF/lib/datanucleus-*.jar
