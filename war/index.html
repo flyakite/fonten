@@ -107,7 +107,7 @@
           <p>
             Use Simple API if you only need not so many characters ( ~&lt;2000 for Ascii and ~&lt;200 for encoded Chinese characters to comply with <a href="http://support.microsoft.com/kb/208427">IE's URL limit</a>)<br>
             Request to your server's <strong>/font</strong> with following parameters to get the font:<br>
-            <dl class="dl-horizontal">
+            <dl>
               <dt>id</dt>
               <dd>Font id, this is the same as you specified when you upload your font</dd>
               <dt>text</dt>
@@ -125,7 +125,7 @@
     src: url('/font?id=opensans&amp;text=ABC&amp;format=eot');
     src: local('☺'); 
     src: url('/font?id=opensans&amp;text=ABC&amp;format=woff'') format('woff');
-    src: url('/font?id=opensans&amp;text=ABC') format('truetype'); 
+    src: url('/font?id=opensans&amp;text=ABC') format('truetype');
   }
             </pre>
 
@@ -135,31 +135,55 @@
           <p>
             Use Advanced API if you want to get subset font file with more characters. You need to post the input character set to the fonten server first, exchange a reserved token and use the token to get the font file. <br>
             POST request to your server's<strong>/reserve</strong> to reserve a token with parameters:<br>
-            <dl class="dl-horizontal">
+            <dl>
               <dt>text</dt>
               <dd>Charaters you want with the font.</dd>
             </dl>
             Example javascript:
             <pre>
   var postData = { text: encodeURIComponent("ManyCharaters") };
-  $.post('http://fonten-demo.appspot.com/reserve?callback=?', function(data){
+  $.post('http://fonten-demo.appspot.com/reserve?callback=?', postData, function(data){
     var reservedToken = data.token;
   }, 'json');
             </pre>
               and assign the  to <strong>/font</strong> with parameters like in Simple API and the following:
-            <dl class="dl-horizontal">
+            <dl>
               <dt>token</dt>
               <dd>Reserved token returned from server.</dd>
             </dl>
             <pre>
   var fontURL = "http://fonten-demo.appspot.com/font?id=opensans&amp;token=" + reservedToken     
             </pre>
-
           </p>
 
+          <h4>jQuery Plugin</h4>
+          <p>
+            Use fonten jQuery plugin to change font and interact with fonten server can should be easier. <a href="https://github.com/flyakite/fonten/tree/master/war/js">(source)</a><br>
+            Example:
+            <pre>
+  $('#selector').fonten({
+    id: 'opensans'
+  });
+            </pre>
+            fonten jQuery plugin options:
+            <dl>
+              <dt>id</dt>
+              <dd>Font ID specified on fonten server.</dd>
+              <dt>server</dt>
+              <dd>fonten server URI, default points to current server. Ex: "http://myfonten.appspot.com"</dd>
+              <dt>fontPath</dt>
+              <dd>Font path on fonten server, default is "/font"</dd>
+              <dt>reservePath</dt>
+              <dd>Font reservation path on fonten server, default is "/reserve"</dd>
+              <dt>strip</dt>
+              <dd>Whether to strip font hinting, default is true, can be set to 0 or false</dd>
+              <dt class="text-warning">onload</dt>
+              <dd>Method callback function called when the font is loaded</dd>
+            </dl>
+          </p>
 
-          <h4>Credit</h4>
-          <p>This project is developed based on Google's open source project <a href="https://code.google.com/p/sfntly/">sfntly</a> and powered by <a href="https://developers.google.com/appengine/docs/java/overview">Google App Engine/Java.</a></p>
+          <h4>Power by</h4>
+          <p>This project is developed based on <a href="https://code.google.com/p/sfntly/">sfntly</a> and <a href="https://developers.google.com/appengine/docs/java/overview">Google App Engine/Java.</a></p>
 
           <h4>Author</h4>
           <p>

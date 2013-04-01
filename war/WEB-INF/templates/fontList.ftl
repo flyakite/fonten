@@ -63,7 +63,9 @@
                     <tbody>
                         <#list fonts as font>
                             <tr>
-                                <td>${font.getKey().getName()}</td><td>${font.getProperty('fontname')}</td><td>${font.getProperty('created')?string("hh:mm:ss MM/dd yyyy")}</td>
+                                <td>${font.getKey().getName()}</td>
+                                <td class="fonten" data-font-id="${font.getKey().getName()}">${font.getProperty('fontname')}</td>
+                                <td>${font.getProperty('created')?string("hh:mm:ss MM/dd yyyy")}</td>
                             </tr>
                         </#list>
                     </tbody>
@@ -103,4 +105,9 @@
         </div>
     </div>
   </body>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+  <script src="/js/jquery.fonten.js"></script>
+  <script type="text/javascript">
+    $('.fonten').fonten();
+  </script>
 </html>

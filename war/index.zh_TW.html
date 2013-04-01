@@ -106,7 +106,7 @@
           <p>
             如果沒有需要很多字要轉換字型可以使用簡易版API，一般要少於2000字，中文編碼後大概要少於200字才能符合<a href="http://support.microsoft.com/kb/208427"> IE的URL限制</a>。<br>
             連到你的server的 <strong>/font</strong> 並且包含下列參數:<br>
-            <dl class="dl-horizontal">
+            <dl>
               <dt>id</dt>
               <dd>字型id，這是你上傳完整字型檔的時候指定的</dd>
               <dt>text</dt>
@@ -124,7 +124,7 @@
     src: url('/font?id=opensans&amp;text=中文&amp;format=eot');
     src: local('☺'); 
     src: url('/font?id=opensans&amp;text=中文&amp;format=woff'') format('woff');
-    src: url('font?id=opensans&amp;text=中文') format('truetype');
+    src: url('/font?id=opensans&amp;text=中文') format('truetype');
   }
             </pre>
 
@@ -134,19 +134,19 @@
           <p>
             如果你有很多字需要轉換的話可以使用進階API，<br>
             先發一個 POST request 到你的server的 <strong>/reserve</strong> 並且包含以下參數:<br>
-            <dl class="dl-horizontal">
+            <dl>
               <dt>text</dt>
               <dd>要轉換字型的文字</dd>
             </dl>
             範例 javascript:
             <pre>
   var postData = { text: encodeURIComponent("更多中文") };
-  $.post('http://fonten-demo.appspot.com/reserve?callback=?', function(data){
+  $.post('http://fonten-demo.appspot.com/reserve?callback=?', postData, function(data){
     var reservedToken = data.token;
   }, 'json');
             </pre>
               然後 request 到 <strong>/font</strong> 並且包含簡易版API參數(不包含text)和以下參數:
-            <dl class="dl-horizontal">
+            <dl>
               <dt>token</dt>
               <dd>POST預約得到的token</dd>
             </dl>
@@ -156,10 +156,35 @@
 
           </p>
 
-          <h4>歸功於</h4>
+          <h4>jQuery 外掛</h4>
+          <p>
+            使用 jQuery 外掛來改字型與fonten server互動會比較簡單 <a href="https://github.com/flyakite/fonten/tree/master/war/js">(原始碼)</a><br>
+            範例:
+            <pre>
+  $('#selector').fonten({
+    id: 'opensans'
+  });
+            </pre>
+            fonten jQuery 外掛選項:
+            <dl>
+              <dt>id</dt>
+              <dd>字型ID，上傳字型到你的fonten server時定義的。</dd>
+              <dt>server</dt>
+              <dd>fonten server URI，預設指到目前所在頁面。 範例: "http://myfonten.appspot.com"</dd>
+              <dt>fontPath</dt>
+              <dd>字型在fonten server路徑，預設是"/font"</dd>
+              <dt>reservePath</dt>
+              <dd>字型在fonten server預定路徑，預設是"/reserve"</dd>
+              <dt>strip</dt>
+              <dd>是否去掉字體微調(font hinting)，預設是true，可以設成0或false</dd>
+              <dt class="text-warning">onload</dt>
+              <dd>方法函數(callback function)，當字型載入完成時被呼叫</dd>
+            </dl>
+          </p>
+          <h4>得利於</h4>
           <p>這個專案是基於Google開源專案<a href="https://code.google.com/p/sfntly/">sfntly</a>並且使用<a href="https://developers.google.com/appengine/docs/java/overview">Google App Engine/Java</a>架設。</p>
 
-          <h4>作者</h4>
+          <h4>開發者</h4>
           <p>
             Shih-Wen Su <br> 
             sushi@summeridea.com <br>
