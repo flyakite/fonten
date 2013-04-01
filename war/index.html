@@ -168,9 +168,16 @@
             fonten jQuery plugin options:
             <dl>
               <dt>id</dt>
-              <dd>Font ID specified on fonten server.</dd>
+              <dd>
+                Font ID, specified on fonten server. <br> 
+                Font ID can also be specified in the html tag data-attribute.
+                <pre>
+  &lt;div class="fonten" <strong>data-font-id</strong>="opensans"&gt;OpenSans&lt;/div&gt;
+  &lt;div class="fonten" <strong>data-font-id</strong>="droidsans"&gt;DroidSans&lt;/div&gt;
+                </pre>
+              </dd>
               <dt>server</dt>
-              <dd>fonten server URI, default points to current server. Ex: "http://myfonten.appspot.com"</dd>
+              <dd>fonten server URI, default points to current server. e.g: "http://myfonten.appspot.com"</dd>
               <dt>fontPath</dt>
               <dd>Font path on fonten server, default is "/font"</dd>
               <dt>reservePath</dt>
@@ -180,9 +187,10 @@
               <dt class="text-warning">onload</dt>
               <dd>Method callback function called when the font is loaded</dd>
             </dl>
+
           </p>
 
-          <h4>Power by</h4>
+          <h4>Powered by</h4>
           <p>This project is developed based on <a href="https://code.google.com/p/sfntly/">sfntly</a> and <a href="https://developers.google.com/appengine/docs/java/overview">Google App Engine/Java.</a></p>
 
           <h4>Author</h4>

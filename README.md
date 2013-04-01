@@ -13,7 +13,7 @@ The online and real time fonten builds a much smaller size font file that contai
 
 Visit [http://fonten-demo.appspot.com](http://fonten-demo.appspot.com) for installation guide, APIs, jQuery Plugin and Demo.
 
-## Power by
+## Powered by
 This project is developed based on [sfntly](https://code.google.com/p/sfntly/) and [Google App Engine/Java](https://developers.google.com/appengine/docs/java/overview).
 
 ## Author

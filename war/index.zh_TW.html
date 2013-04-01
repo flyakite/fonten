@@ -159,7 +159,7 @@
           <h4>jQuery 外掛</h4>
           <p>
             使用 jQuery 外掛來改字型與fonten server互動會比較簡單 <a href="https://github.com/flyakite/fonten/tree/master/war/js">(原始碼)</a><br>
-            範例:
+            使用範例:
             <pre>
   $('#selector').fonten({
     id: 'opensans'
@@ -168,9 +168,16 @@
             fonten jQuery 外掛選項:
             <dl>
               <dt>id</dt>
-              <dd>字型ID，上傳字型到你的fonten server時定義的。</dd>
+              <dd>
+                字型ID，上傳字型到你的fonten server時定義的。
+                字型ID也可以定義在html標籤的屬性裡。
+                <pre>
+  &lt;div class="fonten" <strong>data-font-id</strong>="opensans"&gt;OpenSans&lt;/div&gt;
+  &lt;div class="fonten" <strong>data-font-id</strong>="droidsans"&gt;DroidSans&lt;/div&gt;
+                </pre>
+              </dd>
               <dt>server</dt>
-              <dd>fonten server URI，預設指到目前所在頁面。 範例: "http://myfonten.appspot.com"</dd>
+              <dd>fonten server URI，預設指到目前所在頁面。 使用範例: "http://myfonten.appspot.com"</dd>
               <dt>fontPath</dt>
               <dd>字型在fonten server路徑，預設是"/font"</dd>
               <dt>reservePath</dt>
