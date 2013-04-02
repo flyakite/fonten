@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.BufferedInputStream;
 import java.nio.channels.Channels;
+import java.net.URLDecoder;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -67,9 +68,9 @@ public class FontSubsetter extends HttpServlet {
             String format = req.getParameter("format");
             String strip = req.getParameter("strip");
             String token = req.getParameter("token");
-            
-            text = getTextFromMemcacheOrDatastore(text, token);
+            text = URLDecoder.decode(text, "UTF-8");
             LOGGER.info(text);
+            text = getTextFromMemcacheOrDatastore(text, token);
             
             //unique values in string
             //Set<String> temp = new HashSet<String>(Arrays.asList(text));
