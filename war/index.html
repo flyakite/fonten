@@ -74,9 +74,16 @@
 
       <div class="row-fluid marketing">
         <div class="span12">
-          <h4>Why fonten?</h4>
+          <h4 id="Why_fonten">Why fonten?</h4>
           <p>
-            The <strong>online and real time</strong> fonten builds <strong>a much smaller size font file</strong> that contains <strong>only specified characters</strong>. One runs a fonten server that hosts all his or her favorite fonts and builds subset font file on the fly. For Chinese fonts, the subset font file built by fonten is only a few KB, which is less than 1/1000 of the original size (10~20MB). What makes it even better? It's <strong>open source</strong>!
+            The <strong>online and real time</strong> fonten builds <strong>a much smaller size font file</strong> that contains <strong>only specified characters</strong>. One runs a fonten server that hosts all his or her favorite fonts and builds subset font file on the fly. For Chinese fonts, the subset font file built by fonten is only a few KB, which is less than 1/1000 of the original size (10~20MB). What makes it even better? It's <strong>open source</strong>!<br>
+          </p>  
+
+          <h4 id="How_to_use">How to use?</h4>
+          <p>
+            To be specific, fonten contains a server side runtime provides dynamic font files and a set of APIs for the client. You need to host your own fonten server and upload authorized fonts to the server to make it work. We don't have a centralized server and we don't provide orginal fonts. Your fonten server can be hosted on Google App Engine/Java for free, and don't worry, you don't need to know how to write Java.<br>
+            <a href="https://developers.google.com/appengine/docs/quotas#Safety_Quotas_and_Billable_Quotas">about GAE's free quota</a>
+          </p>  
 
           <h4>Example Usage</h4>
           <p>
@@ -90,7 +97,7 @@
             </strong>
           </p>
 
-          <h4>Install fonten server</h4>
+          <h4 id="Installation">Install fonten server</h4>
           <p>
             <ol>
               <li> Start a <a href="http://appengine.google.com">Google App Engine (GAE)</a> project, say my_gae_project. </li>
@@ -156,7 +163,7 @@
             </pre>
           </p>
 
-          <h4>jQuery Plugin</h4>
+          <h4 id="jQuery_Plugin">jQuery Plugin</h4>
           <p>
             Use fonten jQuery plugin to change font and interact with fonten server can should be easier. <a href="https://github.com/flyakite/fonten/tree/master/war/js">(source)</a><br>
             Example:

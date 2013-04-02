@@ -74,9 +74,15 @@
 
       <div class="row-fluid marketing">
         <div class="span12">
-          <h4>為什麼用 fonten?</h4>
+          <h4 id="Why_fonten">為什麼用 fonten ？</h4>
           <p>
             fonten是一個<strong>即時線上切割字型檔案的工具</strong>，在你安裝了fonten server之後，你可以先上傳字型檔，之後根據需要的文字即時產生對應的字型檔，尤其像是中文，字型檔動輒10~20MB，如果我們只需要轉換幾個字，那切出來的檔案大概只有幾KB，是原本的千分之一的大小，因為<strong>只有指定的文字的字型被包在新的字型檔裡</strong>。這個專案<strong>是開源的</strong>，你可以自由的改造他來符合你的需求。
+
+          <h4 id="How_to_use">如何使用？</h4>
+          <p>
+            精確的說，fonten有一個server端提供動態字型和一組API與client互動。你需要架設你的fonten server然後上傳已經授權的字型到這個server來提供服務給自己的網站。我們沒有一個集中化的server，我們也不會提供原始字型。你可以免費使用Google App Engine/Java來架設你的fonten server，並且不用擔心，你不需要會寫Java。
+            <a href="https://developers.google.com/appengine/docs/quotas#Safety_Quotas_and_Billable_Quotas">有關GAE免費額度</a>
+          </p>  
 
           <h4>使用範例</h4>
           <p>
@@ -90,7 +96,7 @@
             </strong>
           </p>
 
-          <h4>安裝 fonten server</h4>
+          <h4 id="Install_fonten_server">安裝 fonten server</h4>
           <p>
             <ol>
               <li> 新增一個<a href="http://appengine.google.com">Google App Engine (GAE)</a>專案, 假設是 my_gae_project. </li>
@@ -102,7 +108,7 @@
             </ol>
           </p>
 
-          <h4>簡易API (GET API)</h4>
+          <h4 id="Simple_API">簡易API (GET API)</h4>
           <p>
             如果沒有需要很多字要轉換字型可以使用簡易版API，一般要少於2000字，中文編碼後大概要少於200字才能符合<a href="http://support.microsoft.com/kb/208427"> IE的URL限制</a>。<br>
             連到你的server的 <strong>/font</strong> 並且包含下列參數:<br>
@@ -130,7 +136,7 @@
 
           </p>
 
-          <h4>進階API (POST API)</h4>
+          <h4 id="Advanced_API">進階API (POST API)</h4>
           <p>
             如果你有很多字需要轉換的話可以使用進階API，<br>
             先發一個 POST request 到你的server的 <strong>/reserve</strong> 並且包含以下參數:<br>
@@ -156,7 +162,7 @@
 
           </p>
 
-          <h4>jQuery 外掛</h4>
+          <h4 id="jQuery_Plugin">jQuery 外掛</h4>
           <p>
             使用 jQuery 外掛來改字型與fonten server互動會比較簡單 <a href="https://github.com/flyakite/fonten/tree/master/war/js">(原始碼)</a><br>
             使用範例:
