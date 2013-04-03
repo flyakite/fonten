@@ -1,5 +1,7 @@
 package fonten;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLDecoder;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,10 +25,13 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceException;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.typography.font.sfntly.Font;
 import com.google.typography.font.sfntly.FontFactory;
 import com.google.typography.font.sfntly.Tag;
+import com.google.typography.font.sfntly.data.FontInputStream;
+import com.google.typography.font.sfntly.data.FontOutputStream;
 import com.google.typography.font.sfntly.data.WritableFontData;
 import com.google.typography.font.tools.conversion.eot.EOTWriter;
 import com.google.typography.font.tools.conversion.woff.WoffWriter;
@@ -79,7 +85,7 @@ public class FontSubsetter extends HttpServlet {
             if( strip == "0" || strip == "false"){
             	hinting = false;
             }
-            Font font = getFontFromMemcacheOrDatastore(fontID);
+            Font font = getFontFromMemcacheOrBlobstore(fontID);
             //BlobKey blobKey = getBlobKeyFromMemcacheOrDatastore(fontID);
             //Font font = getFontFromBlobstore(blobKey);
             //Font font = getFontFromStatic(blobKey);
@@ -90,8 +96,15 @@ public class FontSubsetter extends HttpServlet {
         }
     }
     
+    /**
+     * Get Text from memcache or datastore
+     * @param text
+     * @param token
+     * @return text
+     * @throws ServletException
+     */
     private String getTextFromMemcacheOrDatastore(String text, String token) throws ServletException{
-    	try{
+    	try {
 	    	if( text == null && token != null){
 	        	String tokenText = (String) memcache.get(token);
 	        	if( tokenText != null){
@@ -108,31 +121,68 @@ public class FontSubsetter extends HttpServlet {
     	}
     }
     
-    private Font getFontFromMemcacheOrDatastore(String fontID) throws ServletException{
-    	try{
+    
+    /**
+     * Get Font From Blob Key cache and blobstore.
+     * @param fontID
+     * @return font
+     * @throws ServletException
+     */
+    private Font getFontFromMemcacheOrBlobstore(String fontID) throws ServletException{
+    	try {
+    		
+    		BlobKey blobKey;
+    		String cachedBlobKey;
+    		FontFactory fontFactory = FontFactory.getInstance();
+			cachedBlobKey = (String) memcache.get(BLOBKEY_CACHE_PREFIX+fontID);
+			if( cachedBlobKey != null){
+				blobKey = new BlobKey(cachedBlobKey.toString());
+			}else{
+				Key fontKey = KeyFactory.createKey("Font", fontID);
+				Entity entityFont = datastore.get(fontKey);
+				LOGGER.info(entityFont.toString());
+				
+				blobKey = new BlobKey(entityFont.getProperty("blobkey").toString());
+				LOGGER.info(blobKey.getKeyString());
+				memcache.put(BLOBKEY_CACHE_PREFIX+fontID, blobKey.getKeyString());
+			}
+			LOGGER.warning("start reading");
+			Font font = fontFactory.loadFonts(new BlobstoreInputStream(blobKey))[0];
+			LOGGER.warning("start reading");
+    			
+			return font; 
+    	} catch (Exception ex){
+    		throw new ServletException(ex);
+    	}
+    }
+    
+    /**
+     * Get Font From Font cache otherwise from Blob Key cache and from blobstore.
+     * This is experimental, the memcache size of a single item in GAE is limited to 1MB.
+     * @param fontID
+     * @return font
+     * @throws ServletException
+     */
+    private Font getFontFromMemcacheOrBlobstore2(String fontID) throws ServletException{
+    	try {
     		
 	    	BlobKey blobKey;
 	    	String cachedBlobKey;
 	    	FontFactory fontFactory = FontFactory.getInstance();
 	    	Font cachedFont = null;
-	    	//TODO: use memcache to load font
-//	    	byte[] fontB = (byte[]) memcache.get(FONT_CACHE_PREFIX+fontID);
-//	    	if(fontB != null){
-//	    		ByteArrayInputStream bin = new ByteArrayInputStream(fontB);
-//	    		FontInputStream fin = new FontInputStream(bin);
-//	    		cachedFont = fontFactory.loadFonts(fin)[0];
-//	    	}
+	    	byte[] fontB = (byte[]) memcache.get(FONT_CACHE_PREFIX+fontID);
+	    	if(fontB != null){
+	    		ByteArrayInputStream bin = new ByteArrayInputStream(fontB);
+	    		FontInputStream fin = new FontInputStream(bin);
+	    		cachedFont = fontFactory.loadFonts(fin)[0];
+	    	}
 	    	if( cachedFont != null){
-	    		LOGGER.warning("1");
 	    		return cachedFont;
 	    	}else{
 		        cachedBlobKey = (String) memcache.get(BLOBKEY_CACHE_PREFIX+fontID);
 		        if( cachedBlobKey != null){
-		        	LOGGER.warning("2");
 		        	blobKey = new BlobKey(cachedBlobKey.toString());
 		        }else{
-		        	LOGGER.warning("3");
-		        	//get font from id
 		        	Key fontKey = KeyFactory.createKey("Font", fontID);
 		        	Entity entityFont = datastore.get(fontKey);
 		        	LOGGER.info(entityFont.toString());
@@ -141,14 +191,19 @@ public class FontSubsetter extends HttpServlet {
 		        	LOGGER.info(blobKey.getKeyString());
 		        	memcache.put(BLOBKEY_CACHE_PREFIX+fontID, blobKey.getKeyString());
 		        }
+		        LOGGER.warning("start reading");
 		        Font font = fontFactory.loadFonts(new BlobstoreInputStream(blobKey))[0];
+		        LOGGER.warning("start reading");
 		        
-		        //TODO: use memcache to store font
-//		        ByteArrayOutputStream out = new ByteArrayOutputStream();
-//		        ObjectOutputStream os = new ObjectOutputStream(out);
-//		        ff.serializeFont(font, os);
-//	        	memcache.put(FONT_CACHE_PREFIX+fontID, out.toByteArray());
-//	        	os.close();
+		        try {
+			        ByteArrayOutputStream out = new ByteArrayOutputStream();
+			        FontOutputStream os = new FontOutputStream(out);
+			        fontFactory.serializeFont(font, os);
+		        	memcache.put(FONT_CACHE_PREFIX+fontID, out.toByteArray());
+		        	os.close();
+		        } catch (MemcacheServiceException ex){
+		        	LOGGER.warning(ex.toString());
+		        }
 	        	
 	    		return font; 
 	    	}
@@ -157,15 +212,21 @@ public class FontSubsetter extends HttpServlet {
     	}
     }
     
+    /**
+     * Get Font From Blobstore
+     * @param blobKey
+     * @return font
+     * @throws ServletException
+     */
     private Font getFontFromBlobstore(BlobKey blobKey) throws ServletException{
-    	try{
-    		/*
-    		FileService fileService = FileServiceFactory.getFileService();
-            AppEngineFile fontFile = fileService.getBlobFile(blobKey);
-            FileReadChannel readChannel = fileService.openReadChannel(fontFile, false);
+    	try {
+    		
+    		//FileService fileService = FileServiceFactory.getFileService();
+            //AppEngineFile fontFile = fileService.getBlobFile(blobKey);
+            //FileReadChannel readChannel = fileService.openReadChannel(fontFile, false);
             //BufferedReader reader = new BufferedReader(Channels.newReader(readChannel, "UTF8"));
-            InputStream is = Channels.newInputStream(readChannel);
-    		*/
+            //InputStream is = Channels.newInputStream(readChannel);
+    		
     		//BlobstoreInputStream is much faster than the above AppEngineFile
         	Font font = FontUtils.getFonts(new BlobstoreInputStream(blobKey))[0];
         	memcache.put(blobKey, font);
@@ -175,10 +236,16 @@ public class FontSubsetter extends HttpServlet {
     	}
     }
     
-    //test to see if reading a static file can be faster than blobstore
-    /*
+    
+    /**
+     * Get font from static font file.
+     * This is experimental, test to see if reading a static file can be faster than blobstore.
+     * @param blobKey
+     * @return
+     * @throws ServletException
+     */
     private Font getFontFromStatic(BlobKey blobKey) throws ServletException{
-    	try{
+    	try {
     		ServletContext context = getServletContext();
     		String fullPath = context.getRealPath("/WEB-INF/fonts/wthc06.ttf");
     		LOGGER.warning("getfonts");
@@ -189,8 +256,17 @@ public class FontSubsetter extends HttpServlet {
     		throw new ServletException(ex);
     	}
     }
-    */
     
+    
+    /**
+     * Respond subset font based on given params.
+     * @param font
+     * @param text
+     * @param format
+     * @param hinting
+     * @param res request respond
+     * @throws IOException
+     */
     private void subsetFont(
             Font font, String text, FontFormat format, boolean hinting, HttpServletResponse res)
             throws IOException {
