@@ -93,9 +93,7 @@ public class FontSubsetter extends HttpServlet {
             		font = getSubFontFromMemcache(fontID, text, hinting);
             	}
             }
-            if( font != null ){
-            	LOGGER.info("asdf");
-            }else{
+            if( font == null ){
             	text = getTextFromMemcacheOrDatastore(text, token);
             	LOGGER.info(text);
             	font = getFontFromMemcacheOrBlobstore(fontID);
@@ -107,7 +105,11 @@ public class FontSubsetter extends HttpServlet {
             
         	respondFont(font, fontFormat, res);
         	if( enableSubFontCache ){
-        		cacheSubFont(font, fontID, text, hinting);
+        		if(token != null){
+        			cacheSubFont(font, fontID, token, hinting);
+        		}else{
+        			cacheSubFont(font, fontID, text, hinting);
+        		}
         	}
         	
         	
@@ -364,6 +366,14 @@ public class FontSubsetter extends HttpServlet {
     	
     }
     
+    /**
+     * get subset font from cache
+     * @param fontID
+     * @param token
+     * @param hinting
+     * @return
+     * @throws IOException
+     */
     private Font getSubFontFromMemcache( String fontID, String token, boolean hinting) throws IOException{
     	Font cachedFont = null;
     	byte[] fontB = (byte[]) memcache.get(composeSubFontCacheKey(fontID, hinting, token));
@@ -376,6 +386,14 @@ public class FontSubsetter extends HttpServlet {
     	return cachedFont;
     }
     
+    /**
+     * cache subset font 
+     * @param font
+     * @param fontID
+     * @param text
+     * @param hinting
+     * @throws IOException
+     */
     private	void cacheSubFont( Font font, String fontID, String text, boolean hinting) throws IOException {
     	FontFactory fontFactory = FontFactory.getInstance();
     	ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -389,6 +407,13 @@ public class FontSubsetter extends HttpServlet {
     	os.close();
     }
     
+    /**
+     * Use params to compose key for subset font
+     * @param fontID
+     * @param hinting
+     * @param token
+     * @return
+     */
     private String composeSubFontCacheKey( String fontID, boolean hinting, String token){
     	String sHinting = "0";
     	if (hinting){
