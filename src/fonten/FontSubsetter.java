@@ -64,8 +64,6 @@ public class FontSubsetter extends HttpServlet {
             String strip = req.getParameter("strip");
             String token = req.getParameter("token");
             text = URLDecoder.decode(text, "UTF-8");
-            LOGGER.info(text);
-            text = getTextFromMemcacheOrDatastore(text, token);
             
             //unique values in string
             //Set<String> temp = new HashSet<String>(Arrays.asList(text));
@@ -89,11 +87,17 @@ public class FontSubsetter extends HttpServlet {
             Font font = null;
             boolean enableSubFontCache = true; //this should be enabled if same font requests are alike
             if( enableSubFontCache ){
-            	font = getSubFontFromMemcache(fontID, text, hinting);
+            	if(token != null){
+            		font = getSubFontFromMemcache(fontID, token, hinting);
+            	}else{
+            		font = getSubFontFromMemcache(fontID, text, hinting);
+            	}
             }
             if( font != null ){
             	LOGGER.info("asdf");
             }else{
+            	text = getTextFromMemcacheOrDatastore(text, token);
+            	LOGGER.info(text);
             	font = getFontFromMemcacheOrBlobstore(fontID);
             	font = subsetFont(font, text, hinting);
             }
@@ -360,9 +364,9 @@ public class FontSubsetter extends HttpServlet {
     	
     }
     
-    private Font getSubFontFromMemcache( String fontID, String text, boolean hinting) throws IOException{
+    private Font getSubFontFromMemcache( String fontID, String token, boolean hinting) throws IOException{
     	Font cachedFont = null;
-    	byte[] fontB = (byte[]) memcache.get(composeSubFontCacheKey(fontID, hinting, text));
+    	byte[] fontB = (byte[]) memcache.get(composeSubFontCacheKey(fontID, hinting, token));
     	if(fontB != null){
     		FontFactory fontFactory = FontFactory.getInstance();
     		ByteArrayInputStream bin = new ByteArrayInputStream(fontB);
@@ -385,12 +389,12 @@ public class FontSubsetter extends HttpServlet {
     	os.close();
     }
     
-    private String composeSubFontCacheKey( String fontID, boolean hinting, String text){
+    private String composeSubFontCacheKey( String fontID, boolean hinting, String token){
     	String sHinting = "0";
     	if (hinting){
     		sHinting = "1";
     	}
-    	return FONT_CACHE_PREFIX + fontID + ":" + sHinting + ":" + text;
+    	return FONT_CACHE_PREFIX + fontID + ":" + sHinting + ":" + token;
     }
 }
 
