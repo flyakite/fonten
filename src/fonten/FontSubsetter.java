@@ -85,11 +85,27 @@ public class FontSubsetter extends HttpServlet {
             if( strip == "0" || strip == "false"){
             	hinting = false;
             }
-            Font font = getFontFromMemcacheOrBlobstore(fontID);
+            
+            Font font = null;
+            boolean enableSubFontCache = true; //this should be enabled if same font requests are alike
+            if( enableSubFontCache ){
+            	font = getSubFontFromMemcache(fontID, text, hinting);
+            }
+            if( font != null ){
+            	LOGGER.info("asdf");
+            }else{
+            	font = getFontFromMemcacheOrBlobstore(fontID);
+            	font = subsetFont(font, text, hinting);
+            }
             //BlobKey blobKey = getBlobKeyFromMemcacheOrDatastore(fontID);
             //Font font = getFontFromBlobstore(blobKey);
             //Font font = getFontFromStatic(blobKey);
-        	subsetFont(font, text, fontFormat, hinting, res);
+            
+        	respondFont(font, fontFormat, res);
+        	if( enableSubFontCache ){
+        		cacheSubFont(font, fontID, text, hinting);
+        	}
+        	
         	
         } catch (Exception ex) {
             throw new ServletException(ex);
@@ -262,15 +278,12 @@ public class FontSubsetter extends HttpServlet {
      * Respond subset font based on given params.
      * @param font
      * @param text
-     * @param format
      * @param hinting
      * @param res request respond
+     * @return font
      * @throws IOException
      */
-    private void subsetFont(
-            Font font, String text, FontFormat format, boolean hinting, HttpServletResponse res)
-            throws IOException {
-    	boolean mtx = false;
+    private Font subsetFont( Font font, String text, boolean hinting) throws IOException {
     	
     	Font newFont = font;
     	FontFactory fontFactory = FontFactory.getInstance();
@@ -316,26 +329,68 @@ public class FontSubsetter extends HttpServlet {
 	        newFont = hintStripper.subset().build();
     	}
     	
-        //set cache
+    	return newFont;
+    }
+    
+    private void respondFont( Font font, FontFormat format, HttpServletResponse res) throws IOException {
+    	boolean mtx = false;
+    	
+    	//set cache
     	res.setHeader("Last-Modified", new Date().toString());
     	res.setHeader("Cache-Control", "max-age=86400, public");
     	
     	//allow cross domain for firefox
     	res.setHeader("Access-Control-Allow-Origin","*");
-    	
     	//output font file by format
-        OutputStream os = res.getOutputStream();
-        if (format == FontFormat.Eot) {
-            res.setContentType("application/vnd.ms-fontobject");
-            WritableFontData eotData = new EOTWriter(mtx).convert(newFont);
-            eotData.copyTo(os);
-        } else if (format == FontFormat.Woff) {
-            res.setContentType("application/x-font-woff");
-            WritableFontData woffData = new WoffWriter().convert(newFont);
-            woffData.copyTo(os);
-        } else {
-        	//res.setContentType("application/x-font-ttf");
-        	fontFactory.serializeFont(newFont, os);
+    	
+    	OutputStream os = res.getOutputStream();
+    	if (format == FontFormat.Eot) {
+    		res.setContentType("application/vnd.ms-fontobject");
+    		WritableFontData eotData = new EOTWriter(mtx).convert(font);
+    		eotData.copyTo(os);
+    	} else if (format == FontFormat.Woff) {
+    		res.setContentType("application/x-font-woff");
+    		WritableFontData woffData = new WoffWriter().convert(font);
+    		woffData.copyTo(os);
+    	} else {
+    		FontFactory fontFactory = FontFactory.getInstance();
+    		//res.setContentType("application/x-font-ttf");
+    		fontFactory.serializeFont(font, os);
+    	}
+    	
+    }
+    
+    private Font getSubFontFromMemcache( String fontID, String text, boolean hinting) throws IOException{
+    	Font cachedFont = null;
+    	byte[] fontB = (byte[]) memcache.get(composeSubFontCacheKey(fontID, hinting, text));
+    	if(fontB != null){
+    		FontFactory fontFactory = FontFactory.getInstance();
+    		ByteArrayInputStream bin = new ByteArrayInputStream(fontB);
+    		FontInputStream fin = new FontInputStream(bin);
+    		cachedFont = fontFactory.loadFonts(fin)[0];
+    	}
+    	return cachedFont;
+    }
+    
+    private	void cacheSubFont( Font font, String fontID, String text, boolean hinting) throws IOException {
+    	FontFactory fontFactory = FontFactory.getInstance();
+    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+    	FontOutputStream os = new FontOutputStream(out);
+    	fontFactory.serializeFont(font, os);
+    	try {
+        	memcache.put(composeSubFontCacheKey(fontID, hinting, text), out.toByteArray());
+        } catch (MemcacheServiceException ex){
+        	LOGGER.warning(ex.toString());
         }
+    	os.close();
+    }
+    
+    private String composeSubFontCacheKey( String fontID, boolean hinting, String text){
+    	String sHinting = "0";
+    	if (hinting){
+    		sHinting = "1";
+    	}
+    	return FONT_CACHE_PREFIX + fontID + ":" + sHinting + ":" + text;
     }
 }
+
