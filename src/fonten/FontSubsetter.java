@@ -1,56 +1,45 @@
 package fonten;
 
-import com.google.appengine.api.datastore.Key;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.KeyFactory;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.blobstore.BlobKey;
-//import com.google.appengine.api.blobstore.BlobstoreService;
-//import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
-import com.google.appengine.api.files.FileService;
-import com.google.appengine.api.files.FileServiceFactory;
-import com.google.appengine.api.files.AppEngineFile;
-import com.google.appengine.api.files.FileReadChannel;
-import com.google.appengine.api.memcache.MemcacheService;
-import com.google.appengine.api.memcache.MemcacheServiceFactory;
-
-
-import com.google.typography.font.sfntly.Font;
-import com.google.typography.font.sfntly.FontFactory;
-import com.google.typography.font.sfntly.Tag;
-import com.google.typography.font.sfntly.data.WritableFontData;
-//import com.google.typography.font.sfntly.table.core.CMapTable;
-import com.google.typography.font.tools.conversion.eot.EOTWriter;
-import com.google.typography.font.tools.conversion.woff.WoffWriter;
-import com.google.typography.font.tools.fontinfo.FontUtils;
-import com.google.typography.font.tools.subsetter.HintStripper;
-import com.google.typography.font.tools.subsetter.Subsetter;
-import com.google.typography.font.tools.subsetter.RenumberingSubsetter;
-
-//import org.apache.commons.codec.binary.Base64;
-
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.BufferedInputStream;
-import java.nio.channels.Channels;
 import java.net.URLDecoder;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-//import java.util.HashSet;
-import java.util.List;
-import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.appengine.api.blobstore.BlobKey;
+import com.google.appengine.api.blobstore.BlobstoreInputStream;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
+import com.google.typography.font.sfntly.Font;
+import com.google.typography.font.sfntly.FontFactory;
+import com.google.typography.font.sfntly.Tag;
+import com.google.typography.font.sfntly.data.WritableFontData;
+import com.google.typography.font.tools.conversion.eot.EOTWriter;
+import com.google.typography.font.tools.conversion.woff.WoffWriter;
+import com.google.typography.font.tools.fontinfo.FontUtils;
+import com.google.typography.font.tools.subsetter.HintStripper;
+import com.google.typography.font.tools.subsetter.RenumberingSubsetter;
+import com.google.typography.font.tools.subsetter.Subsetter;
+
 public class FontSubsetter extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(FontSubsetter.class.getName());
     private static final String OPT_EOT = "eot";
     private static final String OPT_WOFF = "woff";
+    private static final String FONT_CACHE_PREFIX = "Font:";
+    private static final String BLOBKEY_CACHE_PREFIX = "BlobKey:";
     //private BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     private DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     private MemcacheService memcache = MemcacheServiceFactory.getMemcacheService();
@@ -58,7 +47,7 @@ public class FontSubsetter extends HttpServlet {
     public enum FontFormat {
         Undef, Eot, Woff
     }
-
+    
         
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException {
@@ -90,11 +79,10 @@ public class FontSubsetter extends HttpServlet {
             if( strip == "0" || strip == "false"){
             	hinting = false;
             }
-            
-            BlobKey blobKey = getBlobKeyFromMemcacheOrDatastore(fontID);
-            
-            Font font = getFontFromBlobstore(blobKey);
-
+            Font font = getFontFromMemcacheOrDatastore(fontID);
+            //BlobKey blobKey = getBlobKeyFromMemcacheOrDatastore(fontID);
+            //Font font = getFontFromBlobstore(blobKey);
+            //Font font = getFontFromStatic(blobKey);
         	subsetFont(font, text, fontFormat, hinting, res);
         	
         } catch (Exception ex) {
@@ -120,24 +108,50 @@ public class FontSubsetter extends HttpServlet {
     	}
     }
     
-    private BlobKey getBlobKeyFromMemcacheOrDatastore(String fontID) throws ServletException{
+    private Font getFontFromMemcacheOrDatastore(String fontID) throws ServletException{
     	try{
+    		
 	    	BlobKey blobKey;
 	    	String cachedBlobKey;
-	        cachedBlobKey = (String) memcache.get(fontID);
-	        if( cachedBlobKey != null){
-	        	blobKey = new BlobKey(cachedBlobKey.toString());
-	        }else{
-	        	//get font from id
-	        	Key fontKey = KeyFactory.createKey("Font", fontID);
-	        	Entity entityFont = datastore.get(fontKey);
-	        	LOGGER.info(entityFont.toString());
+	    	FontFactory fontFactory = FontFactory.getInstance();
+	    	Font cachedFont = null;
+	    	//TODO: use memcache to load font
+//	    	byte[] fontB = (byte[]) memcache.get(FONT_CACHE_PREFIX+fontID);
+//	    	if(fontB != null){
+//	    		ByteArrayInputStream bin = new ByteArrayInputStream(fontB);
+//	    		FontInputStream fin = new FontInputStream(bin);
+//	    		cachedFont = fontFactory.loadFonts(fin)[0];
+//	    	}
+	    	if( cachedFont != null){
+	    		LOGGER.warning("1");
+	    		return cachedFont;
+	    	}else{
+		        cachedBlobKey = (String) memcache.get(BLOBKEY_CACHE_PREFIX+fontID);
+		        if( cachedBlobKey != null){
+		        	LOGGER.warning("2");
+		        	blobKey = new BlobKey(cachedBlobKey.toString());
+		        }else{
+		        	LOGGER.warning("3");
+		        	//get font from id
+		        	Key fontKey = KeyFactory.createKey("Font", fontID);
+		        	Entity entityFont = datastore.get(fontKey);
+		        	LOGGER.info(entityFont.toString());
+		        	
+		        	blobKey = new BlobKey(entityFont.getProperty("blobkey").toString());
+		        	LOGGER.info(blobKey.getKeyString());
+		        	memcache.put(BLOBKEY_CACHE_PREFIX+fontID, blobKey.getKeyString());
+		        }
+		        Font font = fontFactory.loadFonts(new BlobstoreInputStream(blobKey))[0];
+		        
+		        //TODO: use memcache to store font
+//		        ByteArrayOutputStream out = new ByteArrayOutputStream();
+//		        ObjectOutputStream os = new ObjectOutputStream(out);
+//		        ff.serializeFont(font, os);
+//	        	memcache.put(FONT_CACHE_PREFIX+fontID, out.toByteArray());
+//	        	os.close();
 	        	
-	        	blobKey = new BlobKey(entityFont.getProperty("blobkey").toString());
-	        	LOGGER.info(blobKey.getKeyString());
-	        	memcache.put(fontID, blobKey.getKeyString());
-	        }
-	        return blobKey;
+	    		return font; 
+	    	}
     	} catch (Exception ex){
     		throw new ServletException(ex);
     	}
@@ -145,17 +159,37 @@ public class FontSubsetter extends HttpServlet {
     
     private Font getFontFromBlobstore(BlobKey blobKey) throws ServletException{
     	try{
+    		/*
     		FileService fileService = FileServiceFactory.getFileService();
             AppEngineFile fontFile = fileService.getBlobFile(blobKey);
             FileReadChannel readChannel = fileService.openReadChannel(fontFile, false);
             //BufferedReader reader = new BufferedReader(Channels.newReader(readChannel, "UTF8"));
-            BufferedInputStream biStream = new BufferedInputStream(Channels.newInputStream(readChannel));
-        	Font font = FontUtils.getFonts(biStream)[0];
+            InputStream is = Channels.newInputStream(readChannel);
+    		*/
+    		//BlobstoreInputStream is much faster than the above AppEngineFile
+        	Font font = FontUtils.getFonts(new BlobstoreInputStream(blobKey))[0];
+        	memcache.put(blobKey, font);
         	return font;
     	} catch (IOException ex){
     		throw new ServletException(ex);
     	}
     }
+    
+    //test to see if reading a static file can be faster than blobstore
+    /*
+    private Font getFontFromStatic(BlobKey blobKey) throws ServletException{
+    	try{
+    		ServletContext context = getServletContext();
+    		String fullPath = context.getRealPath("/WEB-INF/fonts/wthc06.ttf");
+    		LOGGER.warning("getfonts");
+    		Font font = FontUtils.getFonts(fullPath)[0];
+    		LOGGER.warning("done");
+    		return font;
+    	} catch (IOException ex){
+    		throw new ServletException(ex);
+    	}
+    }
+    */
     
     private void subsetFont(
             Font font, String text, FontFormat format, boolean hinting, HttpServletResponse res)
