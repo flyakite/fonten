@@ -14,17 +14,12 @@
 	$.fonten = {
 		init : function(options){
 			this.options = options;
+			
 		},
 
 		_applyFont : function(element, fontFamilyDict){
-			element.css("font-family", fontFamilyDict[element.data('font-id')] + "," + element.css("font-family"));
-			if(this.options.onload && typeof this.options.onload === 'function'){
-				var img = new Image();
-				img.src = this.fontUri;
-				img.onerror = function(){
-					this.options.onload();
-				};
-			}
+			var fontID = element.data('font-id');
+			element.css("font-family", fontFamilyDict[fontID] + "," + element.css("font-family"));
 		},
 
 		_addCSS : function (fontFace){
@@ -50,14 +45,14 @@
 			return fontFace;
 		},
 
-		_makeArraySortedAndUnique : function (A){
-			A.sort();
-			for( var i = A.length; i--;){
-				if(A[i] === A[i-1]){
-					A.splice(i, 1);
+		_makeArraySortedAndUnique : function (arr){
+			arr.sort();
+			for( var i = arr.length; i--;){
+				if(arr[i] === arr[i-1]){
+					arr.splice(i, 1);
 				}
 			}
-			return A;
+			return arr;
 		}
 	};
 
@@ -67,10 +62,10 @@
  			fontFamilyDict={},
  			maxTextLength = 2000;
 		options = $.extend($.fonten.defaultOptions, options);
-		$.fonten.init(options)
+		$.fonten.init(options);
 
 		if(options.id){
-			//uni font
+			//unified font
 			fontTextDict[options.id] = element.text();
 		}else{
 			//indevidual font
@@ -89,7 +84,7 @@
 
 		$.each(fontTextDict, function(k, v){
 			//create a unique font family name, so foten can be called multiple times without ruin previous changed different elements
-			//note that if fonten is called with the same element again, previous font setting is overwritten
+			//note that if fonten is called with the same element again, previous css font setting is overwritten
 			fontFamily = "fonten-" + k + "-" + Math.random().toString().substr(-8);
 			fontFamilyDict[k] = fontFamily;
 			var text = $.fonten._makeArraySortedAndUnique(v.replace(/\s+/g,'').split('')).join('');
@@ -120,7 +115,6 @@
 		fontPath: "/font",
 		reservePath: "/reserve",
 		strip: true,
-		onload: null
 	};
 
 })(jQuery);	

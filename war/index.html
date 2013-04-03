@@ -97,7 +97,7 @@
             </strong>
           </p>
 
-          <h4 id="Installation">Install fonten server</h4>
+          <h4 id="Install_fonten_server">Install fonten server</h4>
           <p>
             <ol>
               <li> Start a <a href="http://appengine.google.com">Google App Engine (GAE)</a> project, say my_gae_project. </li>
@@ -110,7 +110,7 @@
 
           </p>
 
-          <h4>Simple API (GET API)</h4>
+          <h4 id="Simple_API">Simple API (GET API)</h4>
           <p>
             Use Simple API if you only need not so many characters ( ~&lt;2000 for Ascii and ~&lt;200 for encoded Chinese characters to comply with <a href="http://support.microsoft.com/kb/208427">IE's URL limit</a>)<br>
             Request to your server's <strong>/font</strong> with following parameters to get the font:<br>
@@ -138,7 +138,7 @@
 
           </p>
 
-          <h4>Advanced API (POST API)</h4>
+          <h4 id="Advanced_API">Advanced API (POST API)</h4>
           <p>
             Use Advanced API if you want to get subset font file with more characters. You need to post the input character set to the fonten server first, exchange a reserved token and use the token to get the font file. <br>
             POST request to your server's<strong>/reserve</strong> to reserve a token with parameters:<br>
@@ -191,8 +191,6 @@
               <dd>Font reservation path on fonten server, default is "/reserve"</dd>
               <dt>strip</dt>
               <dd>Whether to strip font hinting, default is true, can be set to 0 or false</dd>
-              <dt class="text-warning">onload</dt>
-              <dd>Method callback function called when the font is loaded</dd>
             </dl>
 
           </p>
