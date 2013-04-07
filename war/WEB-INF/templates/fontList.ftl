@@ -97,10 +97,14 @@
                   </div>
                   <div class="control-group">
                     <div class="controls">
-                    <input class="btn" type="submit" value="Upload">
+                    <input id="submit-new-font" class="btn" type="submit" value="Upload">
                     </div>
                   </div>
                 </form>
+                <div id="loading-msg" class="hide">
+                  Uplaoding.... <br>
+                  Please refresh and try again if request timeout.
+                </div>
             </div>
         </div>
     </div>
@@ -109,5 +113,8 @@
   <script src="/js/jquery.fonten.js"></script>
   <script type="text/javascript">
     $('.fonten').fonten();
+    $('#submit-new-font').one('click',function(){
+      $('#loading-msg').show();
+    });
   </script>
 </html>
