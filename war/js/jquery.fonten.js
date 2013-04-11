@@ -11,15 +11,16 @@
 
 ;(function($){
 
-	$.fonten = {
-		init : function(options){
-			this.options = options;
-			
+	var fonten = {
+		_init : function(options){
+			console.log('in _init')
+			this.options = $.extend($.fonten.defaultOptions, options);
+			this._fallbackFonts = ['serif', 'sans-serif', 'monospace'];
 		},
 
-		_applyFont : function(element, fontFamilyDict){
+		_applyFont : function(element){
 			var fontID = element.data('font-id');
-			element.css("font-family", fontFamilyDict[fontID] + "," + element.css("font-family"));
+			element.css("font-family", this._fontFamilyDict[fontID] + "," + element.css("font-family"));
 		},
 
 		_addCSS : function (fontFace){
@@ -53,59 +54,155 @@
 				}
 			}
 			return arr;
-		}
+		},
+
+		_initPlayGround : function(fontID, fontFamily, text){
+			var span = document.createElement('span'),
+				div = document.createElement('div');
+			span.innerHTML = text;
+			div.id = fontFamily;
+			$(div).css({
+				position : 'absolute',
+				top : '-10000px',
+				left : '-10000px',
+				width : '10000px',
+				height: '10000px',
+				visibility: 'hidden',
+				'z-index': '-100'
+			})
+			.append(span)
+			.appendTo('body');
+		},
+
+		_isFontLoaded : function(fontFamily){
+			var $pg = $('#'+fontFamily).find('span'),
+				width,
+				prevWidth;
+			for(var i= this._fallbackFonts.length; i--;){
+				$pg.css('font-family',fontFamily + ',' + this._fallbackFonts[i]);
+				width = $pg.width();
+				if(prevWidth && width != prevWidth){
+					//font width is different, so a fallback font is applied
+					//which means our fontFamily is not yey loaded
+					return false;
+				}
+				prevWidth = width;
+			}
+			return true;
+		},
+
+		_pollForChange : function(fontID, fontFamily){
+			var self = this,
+				start = (new Date()).getTime(),
+				now,
+				poll = window.setInterval(function(){
+					if(self._isFontLoaded(fontFamily)){
+						window.clearInterval(poll);
+						if(typeof self.options.success === 'function')
+							self.options.success(fontID, fontFamily);
+					}else{
+						now = (new Date()).getTime();
+						if(now - start > 10000){
+							window.clearInterval(poll);
+							if(typeof self.options.error === 'function')
+								self.options.error(fontID, fontFamily);
+						}
+					}
+				}, 100);
+
+		},
+
+		_onloadFont : function(fontID, fontFamily, text){
+			this._initPlayGround(fontID, fontFamily, text);
+			this._pollForChange(fontID, fontFamily);
+		},
+
+		_callOnload : function(){
+			var self = this;
+			if( this.options.success !== undefined || this.options.error !== undefined ){
+				$.each(this._fontFamilyDict, function(k, v){
+					self._onloadFont(k, v, window.decodeURIComponent(self.options.fontTextDict[k]));
+				});
+			}
+		},
+
+		_main : function(){
+			var self = this,
+				fontFace,
+				fontFamilyDict = {},
+				maxTextLength = 2000;
+			$.each(this.options.fontTextDict, function(k, v){
+				//create a unique font family name, so foten can be called multiple times without ruin previous changed different elements
+				//note that if fonten is called with the same element again, previous css font setting is overwritten
+				fontFamily = "fonten-" + k + "-" + Math.random().toString().substr(-8);
+				fontFamilyDict[k] = fontFamily;
+				var text = self._makeArraySortedAndUnique(v.replace(/\s+/g,'').split('')).join('');
+				text = window.encodeURIComponent(text);
+				self.options.fontTextDict[k] = text;
+				if(text.length < maxTextLength){
+					fontFace = self._composeFontFace({id: k, text: text}, fontFamily);
+					self._addCSS(fontFace);
+				}else{
+					//use advanced api
+					var postData = {text: text};
+				    $.ajax({
+				    	type: 'POST',
+				    	url: self.options.server + self.options.reservePath,
+				    	crossDomain: true,
+				    	data: postData,
+				    	dataType: 'json',
+				    	success: function(data){
+					    	var token = data.token;
+							fontFace = self._composeFontFace({id: k, token:token}, fontFamily);
+							self._addCSS(fontFace);
+						},
+						error: function(msg){
+							if(typeof self.options.error === 'function')
+								self.options.error(msg);
+						}
+			    	});	
+				}
+			});
+			fonten._fontFamilyDict = fontFamilyDict;
+		},
+	}
+
+	$.fonten = function(options){
+		fonten._init(options);
+		fonten._main();
+		fonten._callOnload();
 	};
 
+
  	$.fn.fonten = function(options) {
- 		var fontFace = "", 
- 			fontTextDict = {}, 
- 			fontFamilyDict={},
- 			maxTextLength = 2000;
-		options = $.extend($.fonten.defaultOptions, options);
-		$.fonten.init(options);
+
+		fonten._init(options);
+		options = fonten.options;
 
 		if(options.id){
 			//unified font
-			fontTextDict[options.id] = element.text();
+			options.fontTextDict[options.id] = element.text();
 		}else{
 			//indevidual font
 			this.each(function(i,element){
-				var $e = $(element),
-					fontid = $e.data('font-id');
+				var $element = $(element),
+					fontid = $element.data('font-id');
 				if(fontid !== undefined){
-					if(fontTextDict[fontid] !== undefined){
-						fontTextDict[fontid] += $e.text();
+					if(options.fontTextDict[fontid] !== undefined){
+						options.fontTextDict[fontid] += $element.text();
 					}else{
-						fontTextDict[fontid] = $e.text();
+						options.fontTextDict[fontid] = $element.text();
 					}
 				}
 			});
 		}
 
-		$.each(fontTextDict, function(k, v){
-			//create a unique font family name, so foten can be called multiple times without ruin previous changed different elements
-			//note that if fonten is called with the same element again, previous css font setting is overwritten
-			fontFamily = "fonten-" + k + "-" + Math.random().toString().substr(-8);
-			fontFamilyDict[k] = fontFamily;
-			var text = $.fonten._makeArraySortedAndUnique(v.replace(/\s+/g,'').split('')).join('');
-			text = window.encodeURIComponent(text);
-			fontTextDict[k] = text;
-			if(text.length < maxTextLength){
-				fontFace = $.fonten._composeFontFace({id: k, text: text}, fontFamily);
-				$.fonten._addCSS(fontFace);
-			}else{
-				//use advanced api
-				var postData = {text: text};
-			    $.post( options.host + options.reservePath + '?callback=?', postData, function(data){
-			    	var token = data.token;
-					fontFace = $.fonten._composeFontFace({id: k, token:token}, fontFamily);
-					$.fonten._addCSS(fontFace);
-		    	}, 'json');	
-			}
-		});
+		fonten._main();
+		fonten._callOnload();
+		
 
 		this.each(function(i, element){
-			$.fonten._applyFont($(element), fontFamilyDict);
+			fonten._applyFont($(element));
 		});
 		return this;
 	};
@@ -115,6 +212,9 @@
 		fontPath: "/font",
 		reservePath: "/reserve",
 		strip: true,
+		fontTextDict: {},
+		success: undefined,
+		error: undefined
 	};
 
 })(jQuery);	

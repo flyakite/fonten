@@ -24,6 +24,7 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.Text;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceException;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
@@ -63,7 +64,9 @@ public class FontSubsetter extends HttpServlet {
             String format = req.getParameter("format");
             String strip = req.getParameter("strip");
             String token = req.getParameter("token");
-            text = URLDecoder.decode(text, "UTF-8");
+            if(text != null){
+            	text = URLDecoder.decode(text, "UTF-8");
+            }
             
             //unique values in string
             //Set<String> temp = new HashSet<String>(Arrays.asList(text));
@@ -85,7 +88,7 @@ public class FontSubsetter extends HttpServlet {
             }
             
             Font font = null;
-            boolean enableSubFontCache = true; //this should be enabled if same font requests are alike
+            boolean enableSubFontCache = true; //this should be enabled if same font requests are alike frequently
             if( enableSubFontCache ){
             	if(token != null){
             		font = getSubFontFromMemcache(fontID, token, hinting);
@@ -95,7 +98,7 @@ public class FontSubsetter extends HttpServlet {
             }
             if( font == null ){
             	text = getTextFromMemcacheOrDatastore(text, token);
-            	LOGGER.info(text);
+            	LOGGER.warning(text);
             	font = getFontFromMemcacheOrBlobstore(fontID);
             	font = subsetFont(font, text, hinting);
             }
@@ -128,13 +131,13 @@ public class FontSubsetter extends HttpServlet {
     private String getTextFromMemcacheOrDatastore(String text, String token) throws ServletException{
     	try {
 	    	if( text == null && token != null){
-	        	String tokenText = (String) memcache.get(token);
+	        	String tokenText = ((Text) memcache.get(token)).getValue();
 	        	if( tokenText != null){
 	        		text = tokenText;
 	        	}else{
 	        		Key rKey = KeyFactory.createKey("Reservation", token);
 	        		Entity reservation = datastore.get(rKey);
-	        		text = reservation.getProperty("text").toString();
+	        		text = ((Text) reservation.getProperty("text")).getValue();
 	        	}
 	        }
 	    	return text;
@@ -162,6 +165,7 @@ public class FontSubsetter extends HttpServlet {
 			}else{
 				Key fontKey = KeyFactory.createKey("Font", fontID);
 				Entity entityFont = datastore.get(fontKey);
+				//TODO: handle entityFont not exist
 				LOGGER.info(entityFont.toString());
 				
 				blobKey = new BlobKey(entityFont.getProperty("blobkey").toString());
