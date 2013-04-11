@@ -165,7 +165,7 @@
           <h4 id="jQuery_Plugin">jQuery 外掛</h4>
           <p>
             使用 jQuery 外掛來改字型與fonten server互動會比較簡單 <a href="https://github.com/flyakite/fonten/tree/master/war/js">(原始碼)</a><br>
-            使用範例:
+            使用範例 1:
             <pre>
   $('#selector').fonten({
     id: 'opensans'
@@ -190,9 +190,29 @@
               <dd>字型在fonten server預定路徑，預設是"/reserve"</dd>
               <dt>strip</dt>
               <dd>是否去掉字體微調(font hinting)，預設是true，可以設成0或false</dd>
+              <dt>success</dt>
+              <dd>回呼函數，當指定字型被成功載入時呼叫</dd>
+              <dt>error</dt>
+              <dd>回呼函數，當指定字型載入失敗時呼叫</dd>
+            </dl>
+            使用範例 2:
+            <pre>
+  $.fonten({
+    fontTextDict: {
+      'opensans': 'ABCD'
+    },
+    success: function(fontID, fontFamily){
+      console.log('成功了 可以開始畫canvas了');
+    }
+  });
+            </pre>
+            <dl>
+              <dt>fontTextDict</dt>
+              <dd>有時候我們不是想要改變頁面上文字的字型，我們只是需要某些文字的字型被載入進來，這時候可以使用fontTextDict這個font ID和text文字的對應，把它餵給$.fonten來讓指定文字的字型載入進來。
+              </dd>
             </dl>
           </p>
-          <h4>得利於</h4>
+          <h4>立足點</h4>
           <p>這個專案是基於Google開源專案<a href="https://code.google.com/p/sfntly/">sfntly</a>並且使用<a href="https://developers.google.com/appengine/docs/java/overview">Google App Engine/Java</a>架設。</p>
 
           <h4>開發者</h4>

@@ -166,7 +166,7 @@
           <h4 id="jQuery_Plugin">jQuery Plugin</h4>
           <p>
             Use fonten jQuery plugin to change font and interact with fonten server can should be easier. <a href="https://github.com/flyakite/fonten/tree/master/war/js">(source)</a><br>
-            Example:
+            Example 1:
             <pre>
   $('#selector').fonten({
     id: 'opensans'
@@ -191,8 +191,27 @@
               <dd>Font reservation path on fonten server, default is "/reserve"</dd>
               <dt>strip</dt>
               <dd>Whether to strip font hinting, default is true, can be set to 0 or false</dd>
+              <dt>success</dt>
+              <dd>callback function when the font is successfully loaded</dd>
+              <dt>error</dt>
+              <dd>callback function when an error occured</dd>
+            </dl><br>
+            Example 2:
+            <pre>
+  $.fonten({
+    fontTextDict: {
+      'opensans': 'ABCD'
+    },
+    success: function(fontID, fontFamily){
+      console.log('success! start to paint my canvas');
+    }
+  });
+            </pre>
+            <dl>
+              <dt>fontTextDict</dt>
+              <dd>Sometimes, there is no element in the dom tree we want to manipulate. We just need the font to be loaded. In this situation, can specify fontTextDict as a font ID - text dictionary mapping and give it to $.fonten to load the font of the specified text.
+              </dd>
             </dl>
-
           </p>
 
           <h4>Powered by</h4>
