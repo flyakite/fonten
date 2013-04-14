@@ -146,10 +146,13 @@
             </dl>
             範例 javascript:
             <pre>
-  var postData = { text: encodeURIComponent("更多中文") };
-  $.post('http://fonten-demo.appspot.com/reserve?callback=?', postData, function(data){
-    var reservedToken = data.token;
-  }, 'json');
+  $.ajax({
+    type: 'POST',
+    url: options.server + '/reserve',
+    crossDomain: true,
+    data: {text: text},
+    dataType: 'json',
+  });
             </pre>
               然後 request 到 <strong>/font</strong> 並且包含簡易版API參數(不包含text)和以下參數:
             <dl>

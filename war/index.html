@@ -148,10 +148,13 @@
             </dl>
             Example javascript:
             <pre>
-  var postData = { text: encodeURIComponent("ManyCharaters") };
-  $.post('http://fonten-demo.appspot.com/reserve?callback=?', postData, function(data){
-    var reservedToken = data.token;
-  }, 'json');
+  $.ajax({
+    type: 'POST',
+    url: options.server + '/reserve',
+    crossDomain: true,
+    data: {text: text},
+    dataType: 'json',
+  });
             </pre>
               and assign the  to <strong>/font</strong> with parameters like in Simple API and the following:
             <dl>
