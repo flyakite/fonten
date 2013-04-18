@@ -12,9 +12,11 @@
 (function($){
     'use strict';
     var fonten = {
+
         init : function(options){
             this.options = $.extend($.fonten.defaultOptions, options);
             this.fallbackFonts = ['serif', 'sans-serif', 'monospace'];
+            this.onloadTestString = this.options.success?'A':'';
         },
 
         applyFont : function(element){
@@ -138,6 +140,7 @@
                 //note that if fonten is called with the same element again, previous css font setting is overwritten
                 fontFamily = "fonten-" + k + "-" + Math.random().toString().substr(-8);
                 fontFamilyDict[k] = fontFamily;
+                v = v + self.onloadTestString;
                 var postData,
                     text = self.makeArraySortedAndUnique(v.replace(/\s+/g,'').split('')).join('');
                 text = window.encodeURIComponent(text);
