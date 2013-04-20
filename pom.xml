@@ -8,8 +8,8 @@
 		<!-- GAE Plugin ((almost) Any GAE Version) -->
 		<gae.version>1.7.7</gae.version>
 		<webappDirectory>${basedir}/war</webappDirectory>
-		<!-- Set your GAE SDK path here -->
-		<gae.home>/appengine-java-sdk-${gae.version}</gae.home>
+		<!-- Set your GAE SDK path here or use mvn gae:unpack to download gae-java-sdk by maven -->
+		<gae.home>${settings.localRepository}/com/google/appengine/appengine-java-sdk/${gae.version}/appengine-java-sdk-${gae.version}</gae.home>
 	</properties>
 
 
